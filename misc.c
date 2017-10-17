@@ -40,7 +40,8 @@ static const struct file_operations fops = {
 static struct miscdevice zuehlke_device = {
 	.minor = MISC_DYNAMIC_MINOR,
 	.name = "zuehlke",
-	.fops = &fops
+	.fops = &fops,
+	.mode = 0666
 };
 
 static int __init misc_init(void)
