@@ -6,9 +6,6 @@
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("madj");
 
-// ssize_t simple_read_from_buffer(void __user *to, size_t count, 
-// loff_t *ppos, const void *from, size_t available);
-
 static const char zuehlke_camp[] = "ZuehlkeCamp2017\n";
 static const int zuehlke_camp_len = strlen(zuehlke_camp);
 
