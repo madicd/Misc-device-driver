@@ -100,13 +100,46 @@ static void remove_all(void)
 
 static int __init misc_init(void)
 {
+	int res;
+	struct identity *temp;
+		
 	INIT_LIST_HEAD(&id_list);
+	res = identity_create("Alice", 1);
+	if(res != 0)
+		goto error_adding;
+	res = identity_create("Bob", 2);
+	if(res != 0)
+		goto error_adding;
+	res = identity_create("Chuck", 3);
+	if(res != 0)
+		goto error_adding;
+	res = identity_create("Dan", 10);
+	if(res != 0)
+		goto error_adding;
+
+	temp = identity_find(42);
+	if(temp != NULL)
+		pr_debug("id 42 = %s\n", temp->name);
+	else
+		pr_debug("id 42 not found\n");	
+
+	identity_destroy(1);
+	identity_destroy(2);
+	identity_destroy(3);
+	identity_destroy(10);
+	identity_destroy(42);
 
 	return misc_register(&zuehlke_device);
+
+error_adding:
+	pr_debug("error adding\n");
+	remove_all();
+	return res;
 }
 
 static void __exit misc_exit(void)
 {
+	remove_all();
 	misc_deregister(&zuehlke_device);
 }
 
