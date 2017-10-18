@@ -2,6 +2,8 @@
 #include <linux/module.h>
 #include <linux/miscdevice.h>
 #include <linux/fs.h>
+#include <linux/list.h>
+#include <linux/slab.h>
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("madj");
@@ -41,10 +43,66 @@ static struct miscdevice zuehlke_device = {
 	.mode = 0666
 };
 
+struct identity {
+	char name[100];
+	int id;
+	struct list_head list;
+};
+
+static struct list_head id_list;
+
+static int identity_create(char *name, int id)
+{
+	struct identity *id_ptr;
+	id_ptr = kzalloc(sizeof(struct identity), GFP_KERNEL);
+	
+	strcpy(id_ptr->name, name);
+	id_ptr->id = id;
+	list_add(&id_ptr->list, &id_list);
+
+	return 0;
+}
+
+static struct identity* identity_find(int id)
+{
+	struct identity *id_ptr;
+	
+	list_for_each_entry(id_ptr, &id_list, list) {
+		if(id_ptr->id == id)
+			return id_ptr;
+	}
+
+	return NULL;
+}
+
+static void identity_destroy(int id)
+{
+	struct identity *id_ptr, *next;
+
+	list_for_each_entry_safe(id_ptr, next, &id_list, list) {
+		if(id_ptr->id == id) {
+			list_del(&id_ptr->list);
+			kzfree(id_ptr);
+			return;
+		}
+	}
+}
+
+static void remove_all(void)
+{
+	struct identity *id_ptr, *next;
+	
+	list_for_each_entry_safe(id_ptr, next, &id_list, list) {
+		list_del(&id_ptr->list);
+		kzfree(id_ptr);
+	}
+}
+
 static int __init misc_init(void)
 {
-	misc_register(&zuehlke_device);
-	return 0;
+	INIT_LIST_HEAD(&id_list);
+
+	return misc_register(&zuehlke_device);
 }
 
 static void __exit misc_exit(void)
