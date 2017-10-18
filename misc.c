@@ -4,6 +4,9 @@
 #include <linux/fs.h>
 #include <linux/list.h>
 #include <linux/slab.h>
+#include <linux/wait.h>
+#include <linux/jiffies.h>
+#include <linux/kthread.h>
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("madj");
@@ -98,6 +101,16 @@ static void remove_all(void)
 	}
 }
 
+DECLARE_WAIT_QUEUE_HEAD(wq);
+
+int kthreadfn(void* data)
+{
+	wait_event_interruptible_timeout(wq, kthread_should_stop(), HZ); 
+	return 0;
+}
+
+static struct task_struct* task;
+
 static int __init misc_init(void)
 {
 	int res;
@@ -129,6 +142,8 @@ static int __init misc_init(void)
 	identity_destroy(10);
 	identity_destroy(42);
 
+	task = kthread_run(kthreadfn, NULL, "My First Kernel Thread");
+
 	return misc_register(&zuehlke_device);
 
 error_adding:
@@ -139,6 +154,7 @@ error_adding:
 
 static void __exit misc_exit(void)
 {
+	kthread_stop(task);
 	remove_all();
 	misc_deregister(&zuehlke_device);
 }
