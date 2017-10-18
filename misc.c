@@ -61,7 +61,7 @@ static int identity_create(char *name, int id)
 	
 	strcpy(id_ptr->name, name);
 	id_ptr->id = id;
-	list_add(&id_ptr->list, &id_list);
+	list_add_tail(&id_ptr->list, &id_list);
 
 	return 0;
 }
@@ -101,6 +101,19 @@ static void remove_all(void)
 	}
 }
 
+static struct identity* get_identity(void)
+{
+	struct identity *head;
+	
+	if(list_empty(&id_list))
+		return NULL;
+	
+	head = list_entry(id_list.next, struct identity, list);
+	list_del(id_list.next);
+	
+	return head;
+} 
+
 DECLARE_WAIT_QUEUE_HEAD(wq);
 
 int kthreadfn(void* data)
@@ -138,6 +151,12 @@ static int __init misc_init(void)
 		pr_debug("id 42 = %s\n", temp->name);
 	else
 		pr_debug("id 42 not found\n");	
+	
+	temp = get_identity();
+	if(temp != NULL)
+		pr_debug("id %d = %s\n", temp->id, temp->name);
+	else
+		pr_debug("List is empty\n");
 
 	identity_destroy(1);
 	identity_destroy(2);
