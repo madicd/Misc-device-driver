@@ -105,7 +105,10 @@ DECLARE_WAIT_QUEUE_HEAD(wq);
 
 int kthreadfn(void* data)
 {
-	wait_event_interruptible_timeout(wq, kthread_should_stop(), HZ); 
+	while(!kthread_should_stop()){
+		wait_event_interruptible_timeout(wq, kthread_should_stop(), HZ); 
+	}
+
 	return 0;
 }
 
